@@ -1,0 +1,18 @@
+{
+    "contents" : "#### FINAL DAP R SCRIPT\n\n### PACKAGES\n# Loading packages\nlibrary(R2jags)\nlibrary(lattice)\nlibrary(ggplot2)\nlibrary(xtable)\n\n### DATA\n\ndd = read.csv(\"HGEvsAS.csv\",header=T,as.is=T) # data set\nhead(dd)\nstr(dd)\n\nss = length(unique(dd$sp)) # total number of species\n\nis = table(dd$sp) # sampling size of each species\n\nhist(log(dd$hge),main=\"\",xlab=\"log(HGE)\")\nhist(dd$aSize,xlab=\"Adult size (m)\",main=\"\")\nhist(aggregate(aSize~sp,dd,mean)$aSize,xlab=\"Adult size (m)\",main=\"\")\n\nplot(hge~aSize,dd)\nlines(predict(loess(hge~aSize,dd)),col=2,lwd=2)\nsummary(lm(hge~aSize,dd))\n\n## Response variable: heigh gain efficiency (HGE; m/kg)\nyy = matrix(,ncol=max(is),nrow=ss)\nfor(i in 1:nrow(yy)){\n  yy[i,1:is[i]] = dd[dd$sp==names(is)[i],\"hge\"]\n  }\nhead(yy)\n\n## Predictor variable: tree adult height (m)\nxx = matrix(,ncol=max(is),nrow=ss)\nfor(i in 1:nrow(xx)){\n  xx[i,1:is[i]] = dd[dd$sp==names(is)[i],\"aSize\"]\n  }\nhead(xx)\n\n### JAGS MODEL\nsink(\"model.txt\")\n  cat(\"\n    model{\n\n      # LIKELIHOOD\n      for(i in 1:ss){\n        for(j in 1:is[i]){\n          y[i,j] =  beta0 + x[i,j]*beta1 + beta[i]+epsilon[i,j]\n          epsilon[i,j] ~ dnorm(0,tau[i])\n          }\n        beta[i] ~ dnorm(0,taub)\n        tau[i] ~ dunif(ai,bi)\n        }\n\n      # PRIORS\n      beta0 ~ dnorm(m0,tau0)\n      beta1 ~ dnorm(0,tau1)\n      \n    }    \n    \", fill = TRUE)\nsink()\n\n\n### PRIORS\n## Extreme cases: \n# inefficient tree: DSL=5cm, sH=150cm, cPos=1m, sDens=1.35g/cm^3\n#maxHGE = 1/((pi*(5/2)^2*150/3)*1.35)\n# efficient tree: DSL=2.5cm, sH=300cm, cPos=3m, sDens=0.1g/cm^3\n#minHGE = 3/((pi*(2.5/2)^2*300/3)*0.1)\n#dd[which(dd$hge==min(dd$hge)),]\n#dd[which(dd$hge==max(dd$hge)),]\n\nrange(dd$hge) # range of HGE used to define the priors\nrange(dd$aSize) # range of adult sizes used to define priors\n\n## beta0\naa0 = diff(range(dd$hge)) # range of possible values for the intercept is the same of the range for the data\ntau0 = 4/aa0 # precision of beta0 according to the range method\nm0 = aa0/2 # mean of beta0 assumed to be at the center of the range\n\n## beta1\naa1 = diff(range(dd$hge))/diff(range(dd$aSize)) # maximum possible value for beta1\ntau1 = 4/2*aa1 # precision of beta1 according to the range method\n\n## beta[i]\ntaub = tau0 # precision of beta[i] is set to be the same of beta0\n\n## tau[i] \nai = 0.001 # minimum allowed value for tau[i]\nbi = tau0 # maximum allowed precision for tau[i]\n\n\n\n\n\n",
+    "created" : 1481070407457.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "564760451",
+    "id" : "395129BC",
+    "lastKnownWriteTime" : 1481091995,
+    "path" : "C:/Users/MVaz/Desktop/FinalDAP/FinalDAP.R",
+    "project_path" : "FinalDAP.R",
+    "properties" : {
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "type" : "r_source"
+}

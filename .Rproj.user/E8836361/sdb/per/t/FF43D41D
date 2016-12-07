@@ -1,0 +1,17 @@
+{
+    "contents" : "#### FINAL DAP - MARCEL VAZ\n\n### DATA\n\n## Tree architectural traits\ntt = read.csv(\"MAO16DATA_all.csv\",header=T,as.is=T)[,c(\"plantID\",\"genus\",\"epithet\",\n  \"code\",\"cii\",\"lblade\",\"phylotax\",\"phylotax2\",\"btype\",\"d10\",\"dbh\",\n  \"sh\",\"cmean\",\"cd1\",\"cd2\",\"tv\",\"tdm\",\"il1\",\"il2\",\"il3\",\"il4\",\"il5\",\n  \"tl1\",\"tl2\",\"tl3\",\"tl4\",\"tl5\",\"dbh0\")]\nhead(tt)\n\ntt$sp = paste(tt$genus,tt$epithet)\n\ntt$sVol = pi*(tt$d10/2000)^2*tt$sh/3 # stem volume (cm^3)\ntt$sDens = (tt$tdm/100)/(tt$tv/100) # stem density (g/cm^3)\ntt$sMass = tt$sVol*tt$sDens # stem mass (g)\n\ntt$cArea = pi*tt$cd1*tt$cd2/40000 # crown projected area (m^2)\n\ntt$cPos = tt$cmean/100 # crown position (m)\n\ntt$medInL = apply(tt[,c(\"il1\",\"il2\",\"il3\",\"il4\",\"il5\")],1,median,na.rm=T)\ntt$medTrL = apply(tt[,c(\"tl1\",\"tl2\",\"tl3\",\"tl4\",\"tl5\")],1,median,na.rm=T)\ntt$cAbs = (tt$medInL-tt$medTrL)/tt$medInL\n  \ntt$hge = tt$cPos/(tt$sMass/1000) # height gain efficiency (m/kg)\ntt$lie = tt$cArea*tt$cAbs/(tt$sMass/1000)\n\ntt = tt[!is.na(tt$hge),]\n#tt2 = tt2[tt2$cAbs>0 & !is.na(tt2$lie),]\n#tt2[tt2$cAbs==0,]\n\n#plot(log(hge)~log(lie),tt2)\n#abline(lm(log(hge)~log(lie),tt2),col=2)\n#summary(lm(log(hge)~log(lie),tt2))\n#plot(lm(log(hge)~log(lie),tt2))\n\nhist(tt$hge)\nhist(log(tt$hge),xlab='log(HGE)',main=\"\")\nany(tt$hge<=0)\n\n\n## Adult size for all tree species\naSize = read.csv(\"maxsizes.csv\",header=T,as.is=T)\naSize$sp = paste(aSize$Genus,aSize$epithet)\naSize$aSize = apply(aSize[,c(\"q975\",\"q975F\")],1,max,na.rm=T)\nhead(aSize)\n\n\nunique(sort(tt$sp[!tt$sp%in%aSize$sp]))\ntt = tt[tt$sp%in%aSize$sp,c(\"sp\",\"hge\")]\ntt$aSize = NA\nfor(i in 1:nrow(tt)){\n  tt[i,\"aSize\"] = aSize[aSize$sp==tt[i,\"sp\"],\"aSize\"]\n  }\n\ntt = tt[order(tt$sp),]\nhead(tt)\n\nwrite.csv(tt,\"HGEvsAS.csv\",row.names=F)\n\nlength(unique(tt$sp)) # number of species\n\n\n\n\n\n",
+    "created" : 1481087059647.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2363064335",
+    "id" : "FF43D41D",
+    "lastKnownWriteTime" : 1481070308,
+    "path" : "C:/Users/MVaz/Desktop/FinalDAP/finalDAP_data.R",
+    "project_path" : "finalDAP_data.R",
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "type" : "r_source"
+}
