@@ -6,9 +6,10 @@ library(R2jags)
 library(lattice)
 library(ggplot2)
 library(xtable)
+source("AddBurnin.R")
+
 
 ### DATA
-
 dd = read.csv("HGEvsAS.csv",header=T,as.is=T) # data set
 head(dd)
 str(dd)
@@ -38,6 +39,7 @@ for(i in 1:nrow(xx)){
   xx[i,1:is[i]] = dd[dd$sp==names(is)[i],"aSize"]
   }
 head(xx)
+
 
 ### JAGS MODEL
 sink("model.txt")
@@ -88,8 +90,28 @@ tau1 = 4/2*aa1 # precision of beta1 according to the range method
 taub = tau0 # precision of beta[i] is set to be the same of beta0
 
 ## tau[i] 
-ai = 0.001 # minimum allowed value for tau[i]
-bi = tau0 # maximum allowed precision for tau[i]
+ai = 0.01 # minimum allowed value for tau[i]
+bi = 100 # maximum allowed precision for tau[i]
+
+
+### JAGS RUN
+# Jags input info
+data = list(n=nn, y=yy, N=nrow(nn), # raw data
+            mm=0, mt=1/3.36, tm1=0, tm2=1/3.36, dm=0, dt=1/2.17, td1=0, td2=1/2.17) 
+inits = rep(list(list(
+  pie=matrix(rep(0.5,22), ncol=2, nrow=11, byrow=TRUE), 
+  mu=rep(0,11), delta=rep(0,11),
+  mu0=0, tau.mu=0.01, delta0=0, tau.delta=0.01 
+)),3) # number of chains
+params = c("pie[1:11,1:2]","mu[1:11]","delta[1:11]","mu0","delta0","tau.mu","tau.delta")
+
+# Jags output
+model.out = jags(data=data, inits=NULL, parameter=params, "model.txt", n.chains=3, n.iter=101000, n.burnin=0, n.thin=20, DIC=F)
+outparams = dimnames(model.out$BUGSoutput$sims.array)[[3]] # all parameter names estimated by jags
+
+# Take the first 1000 runs as burnin
+Output = AddBurnin(model.out$BUGSoutput$sims.array, burnin=1000,n.thin=1)
+
 
 
 

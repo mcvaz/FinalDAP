@@ -1,0 +1,16 @@
+
+model{
+# LIKELIHOOD
+for(i in 1:ss){
+for(j in 1:is[i]){
+y[i,j] =  beta0 + x[i,j]*beta1 + beta[i]+epsilon[i,j]
+epsilon[i,j] ~ dnorm(0,tau[i])
+}
+beta[i] ~ dnorm(0,taub)
+tau[i] ~ dunif(ai,bi)
+}
+# PRIORS
+beta0 ~ dnorm(m0,tau0)
+beta1 ~ dnorm(0,tau1)
+}
+
